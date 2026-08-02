@@ -1,11 +1,6 @@
-# React Typescript E-commerce template
+# Fashion Store
 
-This is an open-source e-commerce template built using react and typescript.
+Monorepo for the fashion e-commerce platform.
 
-## Features
-
-This project includes all the features that you can find in a typical e-commerce platform.
-
-
-
-<!-- ### `yarn start` -->
+- [`frontend/`](frontend/) — React + TypeScript storefront (existing).
+- [`backend/`](backend/) — Go backend (planning stage — see [backend/README.md](backend/README.md) for the architecture, spec, and roadmap docs).
