@@ -58,6 +58,10 @@ func run() error {
 		err = m.Down()
 	case "version":
 		version, dirty, verr := m.Version()
+		if errors.Is(verr, migrate.ErrNilVersion) {
+			fmt.Println("version: none applied yet")
+			return nil
+		}
 		if verr != nil {
 			return fmt.Errorf("version: %w", verr)
 		}
@@ -67,9 +71,18 @@ func run() error {
 		return fmt.Errorf("unknown command %q: usage: migrate <up|down|version>", command)
 	}
 
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	// ErrNoChange: already at the latest/earliest version. os.ErrNotExist:
+	// no migration files exist at all yet (source.Driver.First returns
+	// this by contract — see golang-migrate/migrate/v4/source.Driver).
+	// Both are "nothing to do", not failures — expected before the first
+	// module adds its first migration.
+	switch {
+	case err == nil:
+		fmt.Printf("migrate %s: done\n", command)
+	case errors.Is(err, migrate.ErrNoChange), errors.Is(err, os.ErrNotExist):
+		fmt.Printf("migrate %s: done (nothing to do)\n", command)
+	default:
 		return fmt.Errorf("%s: %w", command, err)
 	}
-	fmt.Printf("migrate %s: done\n", command)
 	return nil
 }

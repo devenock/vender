@@ -1,4 +1,4 @@
-.PHONY: run worker build test test-integration lint fmt vet tidy \
+.PHONY: dev run worker build test test-integration lint fmt vet tidy \
 	migrate-up migrate-down migrate-version \
 	docker-up docker-down docker-logs deploy
 
@@ -9,10 +9,13 @@ LOAD_ENV = set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a;
 
 ## --- Local development ---
 
-run: ## Run the API server locally
+dev: docker-up migrate-up ## One-command start: dependencies (docker) + migrations + api, in the foreground
+	$(MAKE) run
+
+run: ## Run the API server locally (needs docker-up first, unless using `make dev`)
 	$(LOAD_ENV) go run ./cmd/api
 
-worker: ## Run the background worker locally
+worker: ## Run the background worker locally (needs docker-up first)
 	$(LOAD_ENV) go run ./cmd/worker
 
 ## --- Build ---
@@ -53,10 +56,10 @@ migrate-down: ## Roll back the last migration
 migrate-version: ## Print current migration version
 	$(LOAD_ENV) go run ./cmd/migrate version
 
-## --- Docker (local dev stack: postgres, redis, minio, api, worker) ---
+## --- Docker (local dev stack: postgres, redis, minio only — see deployments/compose/docker-compose.yml) ---
 
-docker-up: ## Start the local dev stack
-	docker compose -f deployments/compose/docker-compose.yml up -d --build
+docker-up: ## Start dependencies and block until they're healthy
+	docker compose -f deployments/compose/docker-compose.yml up -d --wait
 
 docker-down: ## Stop the local dev stack
 	docker compose -f deployments/compose/docker-compose.yml down

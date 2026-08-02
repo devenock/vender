@@ -16,7 +16,13 @@ services:
       POSTGRES_PASSWORD: app
       POSTGRES_DB: fashion_store
     ports:
-      - "5432:5432"
+      # Host port 5433, not 5432: a locally-installed Postgres (outside
+      # Docker) is a common thing to already have running on 5432 on a
+      # dev machine, and it silently wins that port over Docker's proxy.
+      # Container-internal port stays 5432 — other containers still
+      # reach this one at postgres:5432; only the host-side mapping
+      # changes (see POSTGRES_PORT in .env.example).
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
